@@ -7,38 +7,38 @@
 
 DWORD GetProcIdByName(const TCHAR* procName) 
 {
-	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); // получаем снимки процессов всех
-	if (hSnap == INVALID_HANDLE_VALUE) // если hSnap не получилось, возвращаем 10 код ошибки
+	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); // получаем снимки процессов всех / get snapshots of all processes
+	if (hSnap == INVALID_HANDLE_VALUE) // если hSnap не получилось, возвращаем 10 код ошибки /if hSnap failed, return error code 10
 	{
 		return 10;
 	}
 	
-	PROCESSENTRY32W pe32; // открываем pe32
+	PROCESSENTRY32W pe32; // открываем pe32 / // open pe32
 
-	pe32.dwSize = sizeof(PROCESSENTRY32W); // об€зательно
+	pe32.dwSize = sizeof(PROCESSENTRY32W); // об€зательно / mandatory
 
-	if (Process32First(hSnap, &pe32))  // —равнение процесса
+	if (Process32First(hSnap, &pe32)) // —равнение процесса / Compare the process
 	{
-		do // делать
+		do // делать / do
 		{
-			if (_tcscmp(pe32.szExeFile, procName) == 0)  // сравниваем название файла с нашим procName, если да - возвращаем 0
+			if (_tcscmp(pe32.szExeFile, procName) == 0) // сравниваем название файла с нашим procName, если да - возвращаем 0 / compare the file name with our procName, if yes - return 0
 			{
 				CloseHandle(hSnap);
-				return pe32.th32ProcessID; // наш процесс
+				return pe32.th32ProcessID; // наш процесс / our process
 			}
 		} 
-		while (Process32Next(hSnap, &pe32)); // продолжаем пока не найдем
+		while (Process32Next(hSnap, &pe32)); // продолжаем пока не найдем / continue until we find it
 	}
-	CloseHandle(hSnap); // нашли
+	CloseHandle(hSnap); // нашли / found
 	return 0;
 }
 
 int main() {
 	
 	BOOL WPM = 0;
-	TCHAR targetProcess[260];  // Ѕуфер под им€ процесса (260 Ч MAX_PATH)
+	TCHAR targetProcess[260];  // Ѕуфер под им€ процесса (260 Ч MAX_PATH) / Buffer for the process name (260 Ч MAX_PATH)
 	std::wcout << L"Enter process name (example: notepad.exe): ";
-	std::wcin.getline(targetProcess, 260); // читаем строку
+	std::wcin.getline(targetProcess, 260); // читаем строку / read the line
 
 	DWORD procId = GetProcIdByName(targetProcess);
 
