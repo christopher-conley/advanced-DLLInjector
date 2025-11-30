@@ -61,16 +61,33 @@ int main() {
 	std::wcin.getline(pathDll, 260);
 	size_t pathSize = (wcslen(pathDll) + 1) * sizeof(wchar_t);
 	void* loc = VirtualAllocEx(hProcess, NULL, pathSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-	WPM = WriteProcessMemory(hProcess, loc, pathDll, pathSize, 0);
 
-	if (!WPM) {
+	if (loc == NULL) {
+		std::wcout << L"Failed to allocate memory in target process!" << std::endl;
+		CloseHandle(hProcess);
+		return -1;
+	}
+	else {
+		WPM = WriteProcessMemory(hProcess, loc, pathDll, pathSize, 0);
+		if (!WPM) {
+			CloseHandle(hProcess);
+			return -1;
+		}
+	}
+
+	HMODULE hKernel32 = GetModuleHandleW(L"kernel32.dll");
+	if (hKernel32 == NULL) {
+		std::wcout << L"Failed to get handle for kernel32.dll!" << std::endl;
+		VirtualFreeEx(hProcess, loc, 0, MEM_RELEASE);
 		CloseHandle(hProcess);
 		return -1;
 	}
 
-	LPVOID loadLibraryAddr = (LPVOID)GetProcAddress(GetModuleHandle(L"kernel32.dll"), "LoadLibraryW");
+	LPVOID loadLibraryAddr = (LPVOID)GetProcAddress(hKernel32, "LoadLibraryW");
 	if (loadLibraryAddr == NULL) {
-		std::wcout << L"loadlibraryaddr = 0" << std::endl;
+		std::wcout << L"loadLibraryAddr = 0" << std::endl;
+		VirtualFreeEx(hProcess, loc, 0, MEM_RELEASE);
+		CloseHandle(hProcess);
 		return -1;
 	}
 
